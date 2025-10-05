@@ -1,0 +1,203 @@
+
+version: '3.8'
+services:
+  # Infrastructure
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - microservices-net
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - microservices-net
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - microservices-net
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - JWT_SECRET=your-secret-key-change-in-production
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+      - user-service
+      - product-service
+      - order-service
+      - payment-service
+      - chat-service
+    networks:
+      - microservices-net
+
+  # User Service (with load balancing)
+  user-service:
+    build:
+      context: .
+      dockerfile: services/user-service/Dockerfile
+    ports:
+      - "50051:50051"
+    environment:
+      - JWT_SECRET=your-secret-key-change-in-production
+      - SERVICE_PORT=50051
+    networks:
+      - microservices-net
+
+  user-service-2:
+    build:
+      context: .
+      dockerfile: services/user-service/Dockerfile
+    ports:
+      - "50061:50051"
+    environment:
+      - JWT_SECRET=your-secret-key-change-in-production
+      - SERVICE_PORT=50051
+    networks:
+      - microservices-net
+
+  # Product Service (with load balancing)
+  product-service:
+    build:
+      context: .
+      dockerfile: services/product-service/Dockerfile
+    ports:
+      - "50052:50052"
+    environment:
+      - JWT_SECRET=your-secret-key-change-in-production
+      - SERVICE_PORT=50052
+    networks:
+      - microservices-net
+
+  product-service-2:
+    build:
+      context: .
+      dockerfile: services/product-service/Dockerfile
+    ports:
+      - "50062:50052"
+    environment:
+      - JWT_SECRET=your-secret-key-change-in-production
+      - SERVICE_PORT=50052
+    networks:
+      - microservices-net
+
+  # Order Service (with load balancing)
+  order-service:
+    build:
+      context: .
+      dockerfile: services/order-service/Dockerfile
+    ports:
+      - "50053:50053"
+    environment:
+      - JWT_SECRET=your-secret-key-change-in-production
+      - SERVICE_PORT=50053
+    networks:
+      - microservices-net
+
+  order-service-2:
+    build:
+      context: .
+      dockerfile: services/order-service/Dockerfile
+    ports:
+      - "50063:50053"
+    environment:
+      - JWT_SECRET=your-secret-key-change-in-production
+      - SERVICE_PORT=50053
+    networks:
+      - microservices-net
+
+  # Payment Service (with load balancing)
+  payment-service:
+    build:
+      context: .
+      dockerfile: services/payment-service/Dockerfile
+    ports:
+      - "50054:50054"
+    environment:
+      - JWT_SECRET=your-secret-key-change-in-production
+      - SERVICE_PORT=50054
+    networks:
+      - microservices-net
+
+  payment-service-2:
+    build:
+      context: .
+      dockerfile: services/payment-service/Dockerfile
+    ports:
+      - "50064:50054"
+    environment:
+      - JWT_SECRET=your-secret-key-change-in-production
+      - SERVICE_PORT=50054
+    networks:
+      - microservices-net
+
+  # Chat Service (notification-service with chat)
+  chat-service:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    ports:
+      - "50055:50055"
+    environment:
+      - JWT_SECRET=your-secret-key-change-in-production
+      - SERVICE_PORT=50055
+    networks:
+      - microservices-net
+
+  # Service Discovery (Consul for production use)
+  consul:
+    image: consul:1.15
+    ports:
+      - "8500:8500"
+    command: consul agent -dev -client=0.0.0.0 -ui
+    networks:
+      - microservices-net
+
+  # Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - microservices-net
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - microservices-net
+
+networks:
+  microservices-net:
+    driver: bridge
+
+volumes:
+  redis-data:

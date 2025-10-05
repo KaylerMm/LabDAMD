@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package chat;
+
+service ChatService {
+  // Bidirectional streaming for real-time chat
+  rpc ChatStream(stream ChatMessage) returns (stream ChatMessage);
+  
+  // Join a chat room
+  rpc JoinRoom(JoinRoomRequest) returns (JoinRoomResponse);
+  
+  // Leave a chat room
+  rpc LeaveRoom(LeaveRoomRequest) returns (LeaveRoomResponse);
+  
+  // Get chat history
+  rpc GetHistory(GetHistoryRequest) returns (GetHistoryResponse);
+  
+  // User presence
+  rpc UpdatePresence(PresenceRequest) returns (PresenceResponse);
+}
+
+message ChatMessage {
+  string id = 1;
+  string room_id = 2;
+  string user_id = 3;
+  string username = 4;
+  string content = 5;
+  int64 timestamp = 6;
+  MessageType type = 7;
+  map<string, string> metadata = 8;
+}
+
+message JoinRoomRequest {
+  string room_id = 1;
+  string user_id = 2;
+  string username = 3;
+}
+
+message JoinRoomResponse {
+  bool success = 1;
+  string message = 2;
+  repeated string participants = 3;
+}
+
+message LeaveRoomRequest {
+  string room_id = 1;
+  string user_id = 2;
+}
+
+message LeaveRoomResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message GetHistoryRequest {
+  string room_id = 1;
+  int32 limit = 2;
+  int64 before_timestamp = 3;
+}
+
+message GetHistoryResponse {
+  repeated ChatMessage messages = 1;
+  bool has_more = 2;
+}
+
+message PresenceRequest {
+  string user_id = 1;
+  PresenceStatus status = 2;
+}
+
+message PresenceResponse {
+  bool success = 1;
+}
+
+enum MessageType {
+  TEXT = 0;
+  IMAGE = 1;
+  FILE = 2;
+  SYSTEM = 3;
+  TYPING = 4;
+}
+
+enum PresenceStatus {
+  ONLINE = 0;
+  AWAY = 1;
+  BUSY = 2;
+  OFFLINE = 3;
+}
