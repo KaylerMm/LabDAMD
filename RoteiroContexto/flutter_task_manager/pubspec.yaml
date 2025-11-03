@@ -1,0 +1,42 @@
+name: task_manager
+description: Task Manager with native device resources integration
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Database
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  
+  # Camera
+  camera: ^0.10.5+9
+  
+  # Permissions
+  permission_handler: ^11.3.1
+  
+  # Sensors
+  sensors_plus: ^4.0.2
+  vibration: ^1.8.4
+  
+  # GPS & Geocoding
+  geolocator: ^10.1.0
+  geocoding: ^2.1.1
+  
+  # File system
+  path_provider: ^2.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
