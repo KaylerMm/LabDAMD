@@ -1,0 +1,28 @@
+{
+  "name": "shopping-list-messaging",
+  "version": "1.0.0",
+  "description": "Shopping List microservices with RabbitMQ messaging",
+  "main": "index.js",
+  "scripts": {
+    "start:user": "node services/user-service/server.js",
+    "start:list": "node services/list-service/server.js",
+    "start:item": "node services/item-service/server.js",
+    "start:gateway": "node api-gateway/server.js",
+    "start:notification-consumer": "node consumers/notification-consumer.js",
+    "start:analytics-consumer": "node consumers/analytics-consumer.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["rabbitmq", "microservices", "messaging"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "amqplib": "^0.10.3",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "mongoose": "^7.5.0",
+    "axios": "^1.5.0",
+    "uuid": "^9.0.1"
+  }
+}
