@@ -57,6 +57,7 @@ class Task {
     final json = {
       'title': title,
       'description': description,
+      'completed': completed ? 1 : 0, // Enviar como int (0/1)
       'priority': priority,
     };
     
@@ -70,12 +71,20 @@ class Task {
 
   // Criar Task do JSON (da API)
   factory Task.fromJson(Map<String, dynamic> json, {String? localId}) {
+    // Converter int (0/1) para bool se necessário
+    bool parseCompleted(dynamic value) {
+      if (value is bool) return value;
+      if (value is int) return value == 1;
+      if (value is String) return value == '1' || value.toLowerCase() == 'true';
+      return false;
+    }
+    
     return Task(
       id: localId,
       serverId: json['id']?.toString(),
       title: json['title'] ?? '',
       description: json['description'] ?? '',
-      completed: json['completed'] ?? false,
+      completed: parseCompleted(json['completed']),
       priority: json['priority'] ?? 'medium',
       createdAt: _parseDateTime(json['createdAt']),
       updatedAt: _parseDateTime(json['updatedAt']),

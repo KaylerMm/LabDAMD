@@ -3,18 +3,67 @@ import 'package:http/http.dart' as http;
 import '../models/task.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.100.230:3000/api';
+  // Lista de URLs para testar (ordem de prioridade)
+  static const List<String> _baseUrls = [
+    'http://localhost:3000/api',        // Android Emulator -> localhost (padrão)
+    'http://localhost:3000/api',    // IP atual da rede
+    'http://localhost:3000/api',      // Docker bridge
+    'http://localhost:3000/api',       // localhost direto
+  ];
   
-  // Testar conectividade com o servidor
+  static String? _workingBaseUrl;
+  
+  static String get baseUrl {
+    return _workingBaseUrl ?? _baseUrls.first;
+  }
+  
+  // Testar conectividade com múltiplos URLs
   static Future<bool> isServerReachable() async {
+    print('🔍 Testando conectividade com servidor...');
+    
+    // Se já temos uma URL que funciona, testar ela primeiro
+    if (_workingBaseUrl != null) {
+      if (await _testSingleUrl(_workingBaseUrl!)) {
+        print('✅ Usando URL salva: $_workingBaseUrl');
+        return true;
+      } else {
+        print('⚠️  URL salva não funciona mais, testando outras...');
+        _workingBaseUrl = null;
+      }
+    }
+    
+    // Testar todas as URLs disponíveis
+    for (String testBaseUrl in _baseUrls) {
+      print('🌐 Testando: $testBaseUrl');
+      
+      if (await _testSingleUrl(testBaseUrl)) {
+        _workingBaseUrl = testBaseUrl;
+        print('✅ Conectado com sucesso: $testBaseUrl');
+        return true;
+      }
+    }
+    
+    print('❌ Nenhuma URL funcionou - servidor offline ou inacessível');
+    return false;
+  }
+  
+  // Testar uma URL específica
+  static Future<bool> _testSingleUrl(String testBaseUrl) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/../health'),
-      ).timeout(const Duration(seconds: 5));
+        Uri.parse('$testBaseUrl/../health'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(const Duration(seconds: 3));
       
-      return response.statusCode == 200;
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['status'] == 'healthy') {
+          return true;
+        }
+      }
+      return false;
     } catch (e) {
-      print('🌐 Servidor não acessível: $e');
+      print('   ❌ Falhou: $e');
       return false;
     }
   }

@@ -40,6 +40,10 @@ dependencies:
   http: ^1.1.0
   connectivity_plus: ^5.0.2
   
+  # Camera e Upload de Imagens
+  image_picker: ^1.0.7
+  path_provider: ^2.1.2
+  
   # UI e Utilitários
   provider: ^6.1.1
   uuid: ^4.1.0
